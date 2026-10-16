@@ -5,12 +5,14 @@ import {
   Get,
   Headers,
   Post,
+  Res,
   UseGuards,
 } from "@nestjs/common";
 import {
   sessionResultSchema,
   type SessionResult,
 } from "@rep-counter/contracts";
+import type { Response } from "express";
 import { ZodError } from "zod";
 
 import { AuthenticationGuard } from "../authentication/authentication.guard.js";
@@ -29,11 +31,16 @@ export class SessionResultsController {
   create(
     @Headers("authorization") authorization: string | undefined,
     @Body() body: unknown,
+    @Res({ passthrough: true }) response: Response,
   ): SessionResult {
-    return this.sessionResultsService.create(
+    const storedResult = this.sessionResultsService.create(
       this.patientId(authorization),
       this.parseResult(body),
     );
+
+    response.status(storedResult.created ? 201 : 200);
+
+    return storedResult.result;
   }
 
   @Get()

@@ -1,6 +1,9 @@
 import { Injectable } from "@nestjs/common";
 
-const patientsByToken = new Map([["alice-demo-token", "alice"]]);
+const patientsByToken = new Map([
+  ["alice-demo-token", "alice"],
+  ["bob-demo-token", "bob"],
+]);
 
 @Injectable()
 export class AuthenticationService {

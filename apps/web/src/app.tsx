@@ -11,9 +11,11 @@ import {
 } from "@/features/fixtures/fixtures";
 import {
   loadSessionResults,
+  type PatientId,
   saveSessionResult,
 } from "@/features/session-results/session-results-api";
 import { FixtureSelector } from "@/shared/components/fixture-selector";
+import { PatientSelector } from "@/shared/components/patient-selector";
 import { SessionActions } from "@/shared/components/session-actions";
 import { SessionHistory } from "@/shared/components/session-history";
 import { SessionResultCard } from "@/shared/components/session-result-card";
@@ -35,6 +37,9 @@ export function App() {
   const [history, setHistory] = useState<SessionResult[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string>();
+  const [patientId, setPatientId] = useState<PatientId>("alice");
+  const [pendingSessionResult, setPendingSessionResult] =
+    useState<SessionResult>();
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
@@ -67,16 +72,32 @@ export function App() {
   }, [fixtureName]);
 
   useEffect(() => {
-    void loadSessionResults()
-      .then(setHistory)
+    let cancelled = false;
+
+    setHistory([]);
+    setSaveError(undefined);
+    setPendingSessionResult(undefined);
+
+    void loadSessionResults(patientId)
+      .then((results) => {
+        if (!cancelled) {
+          setHistory(results);
+        }
+      })
       .catch((reason: unknown) => {
-        setSaveError(
-          reason instanceof Error
-            ? reason.message
-            : "Unable to load session history",
-        );
+        if (!cancelled) {
+          setSaveError(
+            reason instanceof Error
+              ? reason.message
+              : "Unable to load session history",
+          );
+        }
       });
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [patientId]);
 
   const repetitions = fixture ? countReps(fixture.angles) : undefined;
   const durationSec = fixture
@@ -84,22 +105,29 @@ export function App() {
     : undefined;
 
   async function saveCurrentSession() {
-    if (repetitions === undefined || durationSec === undefined) {
+    if (
+      !pendingSessionResult &&
+      (repetitions === undefined || durationSec === undefined)
+    ) {
       return;
     }
 
     setIsSaving(true);
     setSaveError(undefined);
 
+    const result = pendingSessionResult ?? {
+      durationSec: durationSec ?? 0,
+      performedAt: new Date().toISOString(),
+      reps: repetitions ?? 0,
+      sessionId: crypto.randomUUID(),
+    };
+
     try {
-      await saveSessionResult({
-        durationSec,
-        performedAt: new Date().toISOString(),
-        reps: repetitions,
-        sessionId: crypto.randomUUID(),
-      });
-      setHistory(await loadSessionResults());
+      await saveSessionResult(patientId, result);
+      setPendingSessionResult(undefined);
+      setHistory(await loadSessionResults(patientId));
     } catch (reason: unknown) {
+      setPendingSessionResult(result);
       setSaveError(
         reason instanceof Error
           ? reason.message
@@ -126,6 +154,7 @@ export function App() {
       </header>
 
       <section className="grid gap-6">
+        <PatientSelector onValueChange={setPatientId} value={patientId} />
         <FixtureSelector onValueChange={setFixtureName} value={fixtureName} />
         {error ? (
           <p className="rounded-md border border-destructive p-4 text-destructive">
@@ -144,6 +173,7 @@ export function App() {
             />
             <SessionActions
               isSaving={isSaving}
+              isRetry={pendingSessionResult !== undefined}
               onSave={saveCurrentSession}
               disabled={false}
             />

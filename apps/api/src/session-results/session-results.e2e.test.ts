@@ -4,6 +4,7 @@ import request from "supertest";
 import { createApi } from "../app.js";
 
 const aliceToken = "Bearer alice-demo-token";
+const bobToken = "Bearer bob-demo-token";
 
 describe("session results API", () => {
   let api: Awaited<ReturnType<typeof createApi>>;
@@ -70,5 +71,81 @@ describe("session results API", () => {
     expect(created.body).toEqual(laterResult);
     expect(listed.status).toBe(200);
     expect(listed.body).toEqual([laterResult, earlierResult]);
+  });
+
+  it("keeps Alice and Bob's histories isolated", async () => {
+    const server = api.application.getHttpServer();
+    const result = {
+      sessionId: "c0b65a5e-3c10-4f0e-b904-fa758f0dde51",
+      reps: 8,
+      durationSec: 27.6,
+      performedAt: "2026-10-16T10:00:00.000Z",
+    };
+
+    await request(server)
+      .post("/sessions")
+      .set("Authorization", aliceToken)
+      .send(result);
+    await request(server)
+      .post("/sessions")
+      .set("Authorization", bobToken)
+      .send({ ...result, reps: 10 });
+    const aliceHistory = await request(server)
+      .get("/sessions")
+      .set("Authorization", aliceToken);
+    const bobHistory = await request(server)
+      .get("/sessions")
+      .set("Authorization", bobToken);
+
+    expect(aliceHistory.body).toEqual([result]);
+    expect(bobHistory.body).toEqual([{ ...result, reps: 10 }]);
+  });
+
+  it("returns a stored result for an identical retry", async () => {
+    const server = api.application.getHttpServer();
+    const result = {
+      sessionId: "c0b65a5e-3c10-4f0e-b904-fa758f0dde51",
+      reps: 8,
+      durationSec: 27.6,
+      performedAt: "2026-10-16T10:00:00.000Z",
+    };
+
+    const created = await request(server)
+      .post("/sessions")
+      .set("Authorization", aliceToken)
+      .send(result);
+    const retried = await request(server)
+      .post("/sessions")
+      .set("Authorization", aliceToken)
+      .send(result);
+    const history = await request(server)
+      .get("/sessions")
+      .set("Authorization", aliceToken);
+
+    expect(created.status).toBe(201);
+    expect(retried.status).toBe(200);
+    expect(retried.body).toEqual(result);
+    expect(history.body).toEqual([result]);
+  });
+
+  it("rejects a different payload for an existing session ID", async () => {
+    const server = api.application.getHttpServer();
+    const result = {
+      sessionId: "c0b65a5e-3c10-4f0e-b904-fa758f0dde51",
+      reps: 8,
+      durationSec: 27.6,
+      performedAt: "2026-10-16T10:00:00.000Z",
+    };
+
+    await request(server)
+      .post("/sessions")
+      .set("Authorization", aliceToken)
+      .send(result);
+    const conflict = await request(server)
+      .post("/sessions")
+      .set("Authorization", aliceToken)
+      .send({ ...result, reps: 9 });
+
+    expect(conflict.status).toBe(409);
   });
 });
