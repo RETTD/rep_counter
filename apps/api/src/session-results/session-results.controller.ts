@@ -4,6 +4,7 @@ import {
   Controller,
   Get,
   Headers,
+  Inject,
   Post,
   Res,
   UseGuards,
@@ -23,7 +24,9 @@ import { SessionResultsService } from "./session-results.service.js";
 @UseGuards(AuthenticationGuard)
 export class SessionResultsController {
   constructor(
+    @Inject(AuthenticationService)
     private readonly authenticationService: AuthenticationService,
+    @Inject(SessionResultsService)
     private readonly sessionResultsService: SessionResultsService,
   ) {}
 

@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from "@nestjs/common";
+import { ConflictException, Inject, Injectable } from "@nestjs/common";
 
 import type { SessionResult } from "@rep-counter/contracts";
 
@@ -10,6 +10,7 @@ import {
 @Injectable()
 export class SessionResultsService {
   constructor(
+    @Inject(SessionResultsRepository)
     private readonly sessionResultsRepository: SessionResultsRepository,
   ) {}
 

@@ -25,11 +25,24 @@ function isExerciseFixture(value: unknown): value is ExerciseFixture {
 
   return (
     Array.isArray(angles) &&
-    angles.every((angle) => typeof angle === "number") &&
+    angles.length > 0 &&
+    angles.every((angle) => typeof angle === "number" && Number.isFinite(angle)) &&
     typeof description === "string" &&
     typeof expectedReps === "number" &&
-    typeof sampleRateHz === "number"
+    Number.isInteger(expectedReps) &&
+    expectedReps >= 0 &&
+    typeof sampleRateHz === "number" &&
+    Number.isFinite(sampleRateHz) &&
+    sampleRateHz > 0
   );
+}
+
+export function parseFixture(value: unknown): ExerciseFixture {
+  if (!isExerciseFixture(value)) {
+    throw new Error("Invalid fixture");
+  }
+
+  return value;
 }
 
 export async function loadFixture(name: FixtureName): Promise<ExerciseFixture> {
@@ -41,9 +54,5 @@ export async function loadFixture(name: FixtureName): Promise<ExerciseFixture> {
 
   const fixture: unknown = await response.json();
 
-  if (!isExerciseFixture(fixture)) {
-    throw new Error(`Invalid fixture: ${name}`);
-  }
-
-  return fixture;
+  return parseFixture(fixture);
 }

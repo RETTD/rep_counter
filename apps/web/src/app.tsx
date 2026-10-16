@@ -14,6 +14,7 @@ import {
   type PatientId,
   saveSessionResult,
 } from "@/features/session-results/session-results-api";
+import { sessionResultForSave } from "@/features/session-results/session-result-for-save";
 import { FixtureSelector } from "@/shared/components/fixture-selector";
 import { FixtureDataCard } from "@/shared/components/fixture-data-card";
 import { PatientSelector } from "@/shared/components/patient-selector";
@@ -106,22 +107,21 @@ export function App() {
     : undefined;
 
   async function saveCurrentSession() {
-    if (
-      !pendingSessionResult &&
-      (repetitions === undefined || durationSec === undefined)
-    ) {
-      return;
-    }
-
     setIsSaving(true);
     setSaveError(undefined);
 
-    const result = pendingSessionResult ?? {
-      durationSec: durationSec ?? 0,
-      performedAt: new Date().toISOString(),
-      reps: repetitions ?? 0,
-      sessionId: crypto.randomUUID(),
-    };
+    const calculatedResult =
+      pendingSessionResult ||
+      repetitions === undefined ||
+      durationSec === undefined
+        ? undefined
+        : {
+            durationSec,
+            performedAt: new Date().toISOString(),
+            reps: repetitions,
+            sessionId: crypto.randomUUID(),
+          };
+    const result = sessionResultForSave(pendingSessionResult, calculatedResult);
 
     try {
       await saveSessionResult(patientId, result);

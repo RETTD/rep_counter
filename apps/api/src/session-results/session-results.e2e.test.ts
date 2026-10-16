@@ -1,4 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import request from "supertest";
 
 import { createApi } from "../app.js";
@@ -147,5 +150,86 @@ describe("session results API", () => {
       .send({ ...result, reps: 9 });
 
     expect(conflict.status).toBe(409);
+  });
+
+  it("keeps an identical concurrent retry idempotent", async () => {
+    const server = api.application.getHttpServer();
+    const result = {
+      sessionId: "c0b65a5e-3c10-4f0e-b904-fa758f0dde51",
+      reps: 8,
+      durationSec: 27.6,
+      performedAt: "2026-10-16T10:00:00.000Z",
+    };
+
+    const responses = await Promise.all(
+      [1, 2].map(() =>
+        request(server)
+          .post("/sessions")
+          .set("Authorization", aliceToken)
+          .send(result),
+      ),
+    );
+
+    expect(responses.map(({ status }) => status).sort()).toEqual([200, 201]);
+  });
+
+  it("orders different timestamp offsets by the performed instant", async () => {
+    const server = api.application.getHttpServer();
+    const earlier = {
+      sessionId: "c0b65a5e-3c10-4f0e-b904-fa758f0dde51",
+      reps: 8,
+      durationSec: 27.6,
+      performedAt: "2026-10-16T10:00:00+02:00",
+    };
+    const later = {
+      sessionId: "d9c65914-cf52-4dc7-9a1b-8bcc1aaea0a5",
+      reps: 10,
+      durationSec: 36.3,
+      performedAt: "2026-10-16T09:00:00Z",
+    };
+
+    await request(server)
+      .post("/sessions")
+      .set("Authorization", aliceToken)
+      .send(earlier);
+    await request(server)
+      .post("/sessions")
+      .set("Authorization", aliceToken)
+      .send(later);
+    const listed = await request(server)
+      .get("/sessions")
+      .set("Authorization", aliceToken);
+
+    expect(
+      listed.body.map((result: { sessionId: string }) => result.sessionId),
+    ).toEqual([later.sessionId, earlier.sessionId]);
+  });
+
+  it("keeps a saved result after the API reopens its database file", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "rep-counter-"));
+    const databasePath = join(directory, "sessions.sqlite");
+    const result = {
+      sessionId: "c0b65a5e-3c10-4f0e-b904-fa758f0dde51",
+      reps: 8,
+      durationSec: 27.6,
+      performedAt: "2026-10-16T10:00:00.000Z",
+    };
+    const firstApi = await createApi(databasePath);
+
+    await request(firstApi.application.getHttpServer())
+      .post("/sessions")
+      .set("Authorization", aliceToken)
+      .send(result);
+    await firstApi.close();
+
+    const reopenedApi = await createApi(databasePath);
+    const listed = await request(reopenedApi.application.getHttpServer())
+      .get("/sessions")
+      .set("Authorization", aliceToken);
+
+    await reopenedApi.close();
+    await rm(directory, { force: true, recursive: true });
+
+    expect(listed.body).toEqual([result]);
   });
 });

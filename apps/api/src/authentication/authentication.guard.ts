@@ -1,6 +1,7 @@
 import {
   CanActivate,
   ExecutionContext,
+  Inject,
   Injectable,
   UnauthorizedException,
 } from "@nestjs/common";
@@ -10,7 +11,10 @@ import { AuthenticationService } from "./authentication.service.js";
 
 @Injectable()
 export class AuthenticationGuard implements CanActivate {
-  constructor(private readonly authenticationService: AuthenticationService) {}
+  constructor(
+    @Inject(AuthenticationService)
+    private readonly authenticationService: AuthenticationService,
+  ) {}
 
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<Request>();

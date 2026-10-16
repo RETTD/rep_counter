@@ -5,7 +5,10 @@ export const sessionResultSchema = z
     sessionId: z.uuid(),
     reps: z.number().int().nonnegative(),
     durationSec: z.number().positive(),
-    performedAt: z.string().datetime({ offset: true }),
+    performedAt: z
+      .string()
+      .datetime({ offset: true })
+      .transform((value) => new Date(value).toISOString()),
   })
   .strict();
 

@@ -1,5 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
 
 import type { SessionResult } from "@rep-counter/contracts";
 
@@ -26,10 +26,24 @@ export class SessionResultsRepository {
       return { created: false, result: storedResult };
     }
 
-    this.sessionDatabase.database
-      .insert(sessionResults)
-      .values({ patientId, ...result })
-      .run();
+    try {
+      this.sessionDatabase.database
+        .insert(sessionResults)
+        .values({ patientId, ...result })
+        .run();
+    } catch (error: unknown) {
+      const concurrentResult = this.findBySessionId(
+        patientId,
+        result.sessionId,
+      );
+
+      if (concurrentResult) {
+        return { created: false, result: concurrentResult };
+      }
+
+      throw error;
+    }
+
     this.sessionDatabase.persist();
 
     return { created: true, result };
@@ -61,8 +75,12 @@ export class SessionResultsRepository {
         performedAt: sessionResults.performedAt,
       })
       .from(sessionResults)
-      .where(eq(sessionResults.patientId, patientId))
-      .all()
-      .find((result) => result.sessionId === sessionId);
+      .where(
+        and(
+          eq(sessionResults.patientId, patientId),
+          eq(sessionResults.sessionId, sessionId),
+        ),
+      )
+      .get();
   }
 }
