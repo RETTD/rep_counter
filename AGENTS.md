@@ -10,6 +10,8 @@
 - NestJS controllers map HTTP; services own application rules; repositories own persistence.
 - Treat `shared/ui` as shadcn-owned and immutable. Application code imports UI only from `shared/components`, where shadcn primitives may be composed and styled.
 - Organize application code by feature. Keep public contracts in the shared contracts package.
+- Use PascalCase for React components and types, camelCase for values and functions, and feature-local files with focused names.
+- Prefer small functions and explicit domain types over indirection. Do not use `any` or type assertions.
 
 ## Quality
 
