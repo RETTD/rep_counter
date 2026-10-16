@@ -2,6 +2,12 @@
 
 A full-stack take-home exercise that counts squat repetitions from browser-local knee-angle samples and saves only a patient-owned session summary.
 
+## Development approach
+
+I used AI as a development assistant, guided by structured engineering skills such as TDD, code review, architecture review, and debugging. The AI helped me challenge design decisions, identify edge cases, and improve code quality; it did not replace my ownership of the solution.
+
+I independently verified the final application locally, reviewed the implementation and API behaviour, and ran formatting, linting, type checks, automated tests, and production builds before submission.
+
 ## Run locally
 
 Use Node.js 22 and pnpm 10.
