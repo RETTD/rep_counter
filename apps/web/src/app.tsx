@@ -15,6 +15,7 @@ import {
   saveSessionResult,
 } from "@/features/session-results/session-results-api";
 import { FixtureSelector } from "@/shared/components/fixture-selector";
+import { FixtureDataCard } from "@/shared/components/fixture-data-card";
 import { PatientSelector } from "@/shared/components/patient-selector";
 import { SessionActions } from "@/shared/components/session-actions";
 import { SessionHistory } from "@/shared/components/session-history";
@@ -164,6 +165,7 @@ export function App() {
         {!fixture && !error ? (
           <p className="text-muted-foreground">Loading fixture…</p>
         ) : null}
+        {fixture ? <FixtureDataCard fixture={fixture} /> : null}
         {fixture && repetitions !== undefined && durationSec !== undefined ? (
           <>
             <SessionResultCard
