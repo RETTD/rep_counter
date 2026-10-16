@@ -5,8 +5,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from "@nestjs/common";
-import type { Request } from "express";
-
+import type { AuthenticatedRequest } from "./authenticated-request.js";
 import { AuthenticationService } from "./authentication.service.js";
 
 @Injectable()
@@ -17,15 +16,20 @@ export class AuthenticationGuard implements CanActivate {
   ) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const request = context.switchToHttp().getRequest<Request>();
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const authorization =
       typeof request.headers.authorization === "string"
         ? request.headers.authorization
         : undefined;
 
-    if (!this.authenticationService.patientIdFromAuthorization(authorization)) {
+    const patientId =
+      this.authenticationService.patientIdFromAuthorization(authorization);
+
+    if (!patientId) {
       throw new UnauthorizedException();
     }
+
+    request.auth = { patientId };
 
     return true;
   }

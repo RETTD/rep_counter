@@ -3,7 +3,6 @@ import {
   Body,
   Controller,
   Get,
-  Headers,
   Inject,
   Post,
   Res,
@@ -17,27 +16,25 @@ import type { Response } from "express";
 import { ZodError } from "zod";
 
 import { AuthenticationGuard } from "../authentication/authentication.guard.js";
-import { AuthenticationService } from "../authentication/authentication.service.js";
+import { CurrentPatientId } from "../authentication/current-patient-id.decorator.js";
 import { SessionResultsService } from "./session-results.service.js";
 
 @Controller("sessions")
 @UseGuards(AuthenticationGuard)
 export class SessionResultsController {
   constructor(
-    @Inject(AuthenticationService)
-    private readonly authenticationService: AuthenticationService,
     @Inject(SessionResultsService)
     private readonly sessionResultsService: SessionResultsService,
   ) {}
 
   @Post()
   create(
-    @Headers("authorization") authorization: string | undefined,
+    @CurrentPatientId() patientId: string,
     @Body() body: unknown,
     @Res({ passthrough: true }) response: Response,
   ): SessionResult {
     const storedResult = this.sessionResultsService.create(
-      this.patientId(authorization),
+      patientId,
       this.parseResult(body),
     );
 
@@ -47,23 +44,8 @@ export class SessionResultsController {
   }
 
   @Get()
-  list(
-    @Headers("authorization") authorization: string | undefined,
-  ): SessionResult[] {
-    return this.sessionResultsService.listForPatient(
-      this.patientId(authorization),
-    );
-  }
-
-  private patientId(authorization: string | undefined): string {
-    const patientId =
-      this.authenticationService.patientIdFromAuthorization(authorization);
-
-    if (!patientId) {
-      throw new BadRequestException("Authenticated patient is required");
-    }
-
-    return patientId;
+  list(@CurrentPatientId() patientId: string): SessionResult[] {
+    return this.sessionResultsService.listForPatient(patientId);
   }
 
   private parseResult(body: unknown): SessionResult {
