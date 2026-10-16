@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.turbo/
+coverage/
+playwright-report/
+test-results/
+*.log
+.env
+.env.*
+!.env.example
+*.sqlite
+*.sqlite-journal
+.scratch/
+docs/agents/
+GLOSSARY.md
+rep-counter-v2.html
