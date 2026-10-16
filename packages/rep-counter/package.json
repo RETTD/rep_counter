@@ -1,0 +1,13 @@
+{
+  "name": "@rep-counter/rep-counter",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    "./count-reps": "./src/count-reps.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  }
+}

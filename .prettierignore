@@ -1,0 +1,8 @@
+apps/web/src/shared/ui
+apps/web/dist
+coverage
+fixtures
+node_modules
+packages/*/.turbo
+pnpm-lock.yaml
+rep-counter-v2.html
