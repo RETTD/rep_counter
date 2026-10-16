@@ -71,7 +71,6 @@ export function App() {
               isSaving={isSaving}
               isRetry={pendingSessionResult !== undefined}
               onSave={saveCurrentSession}
-              disabled={false}
             />
           </>
         ) : null}
