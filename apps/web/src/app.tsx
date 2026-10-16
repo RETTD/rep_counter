@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { countReps } from "@rep-counter/rep-counter/count-reps";
+import type { SessionResult } from "@rep-counter/contracts";
 
 import {
   fixtureOptions,
@@ -8,7 +9,13 @@ import {
   type ExerciseFixture,
   type FixtureName,
 } from "@/features/fixtures/fixtures";
+import {
+  loadSessionResults,
+  saveSessionResult,
+} from "@/features/session-results/session-results-api";
 import { FixtureSelector } from "@/shared/components/fixture-selector";
+import { SessionActions } from "@/shared/components/session-actions";
+import { SessionHistory } from "@/shared/components/session-history";
 import { SessionResultCard } from "@/shared/components/session-result-card";
 import { ThemeToggle } from "@/shared/components/theme-toggle";
 
@@ -25,6 +32,9 @@ export function App() {
   );
   const [fixture, setFixture] = useState<ExerciseFixture>();
   const [error, setError] = useState<string>();
+  const [history, setHistory] = useState<SessionResult[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string>();
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
@@ -56,10 +66,49 @@ export function App() {
     };
   }, [fixtureName]);
 
+  useEffect(() => {
+    void loadSessionResults()
+      .then(setHistory)
+      .catch((reason: unknown) => {
+        setSaveError(
+          reason instanceof Error
+            ? reason.message
+            : "Unable to load session history",
+        );
+      });
+  }, []);
+
   const repetitions = fixture ? countReps(fixture.angles) : undefined;
   const durationSec = fixture
     ? fixture.angles.length / fixture.sampleRateHz
     : undefined;
+
+  async function saveCurrentSession() {
+    if (repetitions === undefined || durationSec === undefined) {
+      return;
+    }
+
+    setIsSaving(true);
+    setSaveError(undefined);
+
+    try {
+      await saveSessionResult({
+        durationSec,
+        performedAt: new Date().toISOString(),
+        reps: repetitions,
+        sessionId: crypto.randomUUID(),
+      });
+      setHistory(await loadSessionResults());
+    } catch (reason: unknown) {
+      setSaveError(
+        reason instanceof Error
+          ? reason.message
+          : "Unable to save session result",
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
   return (
     <main className="mx-auto grid min-h-screen max-w-3xl content-center gap-8 px-5 py-12">
@@ -87,12 +136,25 @@ export function App() {
           <p className="text-muted-foreground">Loading fixture…</p>
         ) : null}
         {fixture && repetitions !== undefined && durationSec !== undefined ? (
-          <SessionResultCard
-            description={fixture.description}
-            durationSec={durationSec}
-            repetitions={repetitions}
-          />
+          <>
+            <SessionResultCard
+              description={fixture.description}
+              durationSec={durationSec}
+              repetitions={repetitions}
+            />
+            <SessionActions
+              isSaving={isSaving}
+              onSave={saveCurrentSession}
+              disabled={false}
+            />
+          </>
         ) : null}
+        {saveError ? (
+          <p className="rounded-md border border-destructive p-4 text-destructive">
+            {saveError}
+          </p>
+        ) : null}
+        <SessionHistory results={history} />
       </section>
     </main>
   );

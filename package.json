@@ -8,7 +8,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "turbo run lint",
-    "test": "turbo run test",
+    "test": "pnpm --filter @rep-counter/rep-counter test && pnpm --filter @rep-counter/api test",
     "typecheck": "turbo run typecheck"
   },
   "devDependencies": {

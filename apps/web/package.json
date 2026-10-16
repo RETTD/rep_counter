@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@rep-counter/contracts": "workspace:^",
     "@rep-counter/rep-counter": "workspace:*",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
