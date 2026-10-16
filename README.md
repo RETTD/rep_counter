@@ -57,7 +57,3 @@ The test suite covers the pure repetition counter and the API HTTP boundary, inc
 - SQLite is stored locally via `sql.js`; a production service would use a managed database, migrations, backups, and observability.
 - The UI has no browser E2E suite for this submission; the automated coverage is focused on the repetition algorithm and API contract.
 - A failed save is retryable while the page remains open; it is not queued across a browser restart.
-
-## Observed AI-agent error
-
-An earlier implementation used the native `better-sqlite3` driver. The HTTP test process intermittently crashed with `SIGSEGV`; the test command exposed the issue before commit. The implementation was replaced with `sql.js`, and the API integration suite was rerun successfully.

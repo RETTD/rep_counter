@@ -18,23 +18,31 @@ function isExerciseFixture(value: unknown): value is ExerciseFixture {
     return false;
   }
 
-  const angles = Reflect.get(value, "angles");
-  const description = Reflect.get(value, "description");
-  const expectedReps = Reflect.get(value, "expectedReps");
-  const sampleRateHz = Reflect.get(value, "sampleRateHz");
+  if (
+    !("angles" in value) ||
+    !("description" in value) ||
+    !("expectedReps" in value) ||
+    !("sampleRateHz" in value)
+  ) {
+    return false;
+  }
 
-  return (
+  const { angles, description, expectedReps, sampleRateHz } = value;
+  const hasAngleSamples =
     Array.isArray(angles) &&
     angles.length > 0 &&
-    angles.every((angle) => typeof angle === "number" && Number.isFinite(angle)) &&
-    typeof description === "string" &&
+    angles.every((angle) => typeof angle === "number" && Number.isFinite(angle));
+  const hasDescription = typeof description === "string";
+  const hasExpectedReps =
     typeof expectedReps === "number" &&
     Number.isInteger(expectedReps) &&
-    expectedReps >= 0 &&
+    expectedReps >= 0;
+  const hasSampleRate =
     typeof sampleRateHz === "number" &&
     Number.isFinite(sampleRateHz) &&
-    sampleRateHz > 0
-  );
+    sampleRateHz > 0;
+
+  return hasAngleSamples && hasDescription && hasExpectedReps && hasSampleRate;
 }
 
 export function parseFixture(value: unknown): ExerciseFixture {

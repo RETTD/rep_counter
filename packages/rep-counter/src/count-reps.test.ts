@@ -13,13 +13,20 @@ function isFixture(value: unknown): value is Fixture {
     return false;
   }
 
-  const angles = Reflect.get(value, "angles");
-  const expectedReps = Reflect.get(value, "expectedReps");
+  if (!("angles" in value) || !("expectedReps" in value)) {
+    return false;
+  }
+
+  const { angles, expectedReps } = value;
 
   return (
     Array.isArray(angles) &&
-    angles.every((angle) => typeof angle === "number") &&
-    typeof expectedReps === "number"
+    angles.every(
+      (angle) => typeof angle === "number" && Number.isFinite(angle),
+    ) &&
+    typeof expectedReps === "number" &&
+    Number.isInteger(expectedReps) &&
+    expectedReps >= 0
   );
 }
 
