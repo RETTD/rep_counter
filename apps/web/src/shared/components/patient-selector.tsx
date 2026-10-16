@@ -12,11 +12,13 @@ import {
 } from "@/features/session-results/session-results-api";
 
 type PatientSelectorProps = {
+  disabled: boolean;
   onValueChange: (value: PatientId) => void;
   value: PatientId;
 };
 
 export function PatientSelector({
+  disabled,
   onValueChange,
   value,
 }: PatientSelectorProps) {
@@ -25,7 +27,7 @@ export function PatientSelector({
       <label className="text-sm font-medium" htmlFor="patient">
         Patient
       </label>
-      <Select onValueChange={onValueChange} value={value}>
+      <Select disabled={disabled} onValueChange={onValueChange} value={value}>
         <SelectTrigger className="w-full" id="patient">
           <SelectValue />
         </SelectTrigger>

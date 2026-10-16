@@ -5,6 +5,7 @@ import { PatientSelector } from "@/shared/components/patient-selector";
 
 type SessionConfigurationProps = {
   fixtureName: FixtureName;
+  isPatientSelectionDisabled: boolean;
   onFixtureNameChange: (fixtureName: FixtureName) => void;
   onPatientIdChange: (patientId: PatientId) => void;
   patientId: PatientId;
@@ -12,13 +13,18 @@ type SessionConfigurationProps = {
 
 export function SessionConfiguration({
   fixtureName,
+  isPatientSelectionDisabled,
   onFixtureNameChange,
   onPatientIdChange,
   patientId,
 }: SessionConfigurationProps) {
   return (
     <div className="grid gap-6">
-      <PatientSelector onValueChange={onPatientIdChange} value={patientId} />
+      <PatientSelector
+        disabled={isPatientSelectionDisabled}
+        onValueChange={onPatientIdChange}
+        value={patientId}
+      />
       <FixtureSelector
         onValueChange={onFixtureNameChange}
         value={fixtureName}

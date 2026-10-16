@@ -54,6 +54,7 @@ export function App() {
       <section className="grid gap-6">
         <SessionConfiguration
           fixtureName={fixtureName}
+          isPatientSelectionDisabled={isSaving}
           onFixtureNameChange={setFixtureName}
           onPatientIdChange={setPatientId}
           patientId={patientId}
