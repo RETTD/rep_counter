@@ -4,9 +4,29 @@ A full-stack take-home exercise that counts squat repetitions from browser-local
 
 ## Development approach
 
-I used AI as a development assistant, guided by structured engineering skills such as TDD, code review, architecture review, and debugging. The AI helped me challenge design decisions, identify edge cases, and improve code quality; it did not replace my ownership of the solution.
+The period between the first and last commit does not represent continuous work. I had pre-existing personal commitments, so I worked in smaller, focused sessions. Each commit represents a coherent, working increment rather than an incomplete snapshot.
 
-I independently verified the final application locally, reviewed the implementation and API behaviour, and ran formatting, linting, type checks, automated tests, and production builds before submission.
+I used AI as a development assistant throughout the task. It helped challenge decisions and speed up feedback loops, while I remained responsible for the final design, implementation, verification, and scope.
+
+### Planning
+
+I used structured AI-guided planning with `grill-with-docs` and `grilling` to clarify the domain boundaries, define the persistence and idempotency rules, choose the project structure, and keep the scope aligned with the take-home brief.
+
+### Implementation
+
+I used `tdd` for behaviour-first implementation, `diagnosing-bugs` to reproduce and resolve the NestJS development-server dependency-injection failure, and `ponytail` to keep feature work focused and avoid unnecessary abstraction.
+
+This included validating API boundaries, keeping raw angle samples browser-only, and separating UI state from feature logic.
+
+### Code review and verification
+
+Before using AI review workflows, I reviewed the code myself for correctness, edge cases, ownership boundaries, naming, unnecessary complexity, and consistency with the chosen architecture.
+
+I then used `caveman-review` for a concise whole-project review and `ponytail-review` for a deeper review of correctness, safety, test coverage, performance, and unnecessary code.
+
+Those reviews identified and addressed issues around retry behaviour, timestamp ordering, database persistence, UI state during patient switching, and the CI build order for shared contracts.
+
+I independently verified the final application locally and ran formatting, linting, type checks, automated tests, API checks, and production builds before submission.
 
 ## Run locally
 
